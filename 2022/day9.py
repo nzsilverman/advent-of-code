@@ -73,8 +73,6 @@ def part2(lines):
 
 
 def main():
-    # lines = readInput('example.txt')
-    # lines = readInput('example2.txt')
     lines = readInput('input.txt')
     print("Part 1")
     part1(lines)
