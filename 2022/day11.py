@@ -141,7 +141,7 @@ def optimizedSimulation(monkeys, commonDenom):
 def part2(monkeys):
     commonDenom = 1
     for monkey in monkeys.values():
-        commonDenom = commonDenom * monkey.modulus
+        commonDenom = int((commonDenom * monkey.modulus) / math.gcd(commonDenom, monkey.modulus))
     for i in range(10000):
     # for i in range(20):
         print(f"Round: {i}")
