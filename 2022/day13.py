@@ -21,6 +21,7 @@ def readInput(filename):
 def checkOrderCorrect(left, right):
     print(f"Compare left: {left} and right: {right}")
     res = True
+    smallerFound = False
     if isinstance(left, list) and isinstance(right, list):
         # Check all elements
         for idx in range(len(left)):
@@ -37,28 +38,34 @@ def checkOrderCorrect(left, right):
             print(f"\tCompare {left[idx]} vs {right[idx]}")
 
             if isinstance(left[idx], list) and isinstance(right[idx], list):
-                res &= checkOrderCorrect(left[idx], right[idx])
+                ret, smallerFound = checkOrderCorrect(left[idx], right[idx])
+                res &= ret
             elif isinstance(left[idx], list) and isinstance(right[idx], int):
-               res &= checkOrderCorrect(left[idx], [right[idx]])
+                ret, smallerFound = checkOrderCorrect(left[idx], [right[idx]])
+                res &= ret
             elif isinstance(left[idx], int) and isinstance(right[idx], list):
-               res &= checkOrderCorrect([left[idx]], right[idx])
+                ret, smallerFound = checkOrderCorrect([left[idx]], right[idx])
+                res &= ret
+            elif isinstance(left[idx], list) and isinstance(right[idx], int):
+                ret, smallerFound = checkOrderCorrect(left[idx], [right[idx]])
+                res &= ret
             elif left[idx] > right[idx]:
                 res &= False
             elif left[idx] < right[idx]:
-                break
+                smallerFound = True
             #     print("smaller found set")
 
-            if res == False:
+            if res == False or smallerFound == True:
                 break
 
-    return res
+    return res, smallerFound
 
 def part1(pairs):
     correctOrder = []
     for idx, pair in enumerate(pairs):
         left, right = pair
         print(f"left: {left}, right: {right}")
-        res = checkOrderCorrect(left, right)
+        res, _ = checkOrderCorrect(left, right)
         print(f"result: {res}\n\n")
         if res == True:
             correctOrder.append(idx + 1)
@@ -68,7 +75,9 @@ def part1(pairs):
 
 def main():
     # lines = readInput('example.txt')
-    lines = readInput('input.txt')
+    # lines = readInput('input.txt')
+    # lines = readInput('inputKarl.txt')
+    lines = readInput('problemChild.txt')
     print("Part 1")
     part1(lines)
     print("Part 2")
