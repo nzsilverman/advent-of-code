@@ -1,3 +1,5 @@
+from collections import deque
+
 def readInput(filename):
     with open(filename, 'r') as f:
         lines = [line.strip() for line in f]
