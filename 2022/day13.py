@@ -36,26 +36,38 @@ def checkOrderCorrect(left, right):
                 break
 
             print(f"\tCompare {left[idx]} vs {right[idx]}")
+            print(f"left: {left}, right: {right}")
 
             if isinstance(left[idx], list) and isinstance(right[idx], list):
                 ret, smallerFound = checkOrderCorrect(left[idx], right[idx])
                 res &= ret
-                if res == True: # todo this is broken
+
+                if len(left) < len(right):
                     break
             elif isinstance(left[idx], list) and isinstance(right[idx], int):
                 ret, smallerFound = checkOrderCorrect(left[idx], [right[idx]])
                 res &= ret
+
+                if len(left) < len([right]):
+                    break
             elif isinstance(left[idx], int) and isinstance(right[idx], list):
                 ret, smallerFound = checkOrderCorrect([left[idx]], right[idx])
                 res &= ret
-            elif isinstance(left[idx], list) and isinstance(right[idx], int):
-                ret, smallerFound = checkOrderCorrect(left[idx], [right[idx]])
-                res &= ret
+
+                if len([left]) < len(right):
+                    break
+            # elif isinstance(left[idx], list) and isinstance(right[idx], int):
+            #     ret, smallerFound = checkOrderCorrect(left[idx], [right[idx]])
+            #     res &= ret
+
+            #     if len(left) < len([right]):
+            #         break
             elif left[idx] > right[idx]:
                 res &= False
             elif left[idx] < right[idx]:
                 smallerFound = True
             #     print("smaller found set")
+
 
             if res == False or smallerFound == True:
                 break
@@ -79,8 +91,8 @@ def part1(pairs):
 def main():
     # lines = readInput('example.txt')
     # lines = readInput('input.txt')
-    # lines = readInput('inputKarl.txt')
-    lines = readInput('problemChild.txt')
+    lines = readInput('inputKarl.txt')
+    # lines = readInput('problemChild.txt')
     # lines = readInput('smallerTest.txt')
     print("Part 1")
     part1(lines)
