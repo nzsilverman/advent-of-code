@@ -1,6 +1,7 @@
 from collections import deque
 import ast
 from itertools import islice
+from functools import cmp_to_key
 
 def readInput(filename):
     with open(filename, 'r') as f:
@@ -22,12 +23,13 @@ def checkOrderCorrect(left, right):
     print(f"Compare left: {left} and right: {right}")
     res = False
     mustBreak = False
+    equal = False
 
     if isinstance(left, list) and isinstance(right, list):
         if len(left) == 0 and len(right) > 0:
             print("returning early here")
             res = True
-            return res, True
+            return res, True, equal
 
         if len(left) == 0 and len(right) == 0:
             res = True
@@ -58,7 +60,7 @@ def checkOrderCorrect(left, right):
             # print(f"left: {left}, right: {right}")
 
             if isinstance(left[idx], list) and isinstance(right[idx], list):
-                res, mustBreak = checkOrderCorrect(left[idx], right[idx])
+                res, mustBreak, equal = checkOrderCorrect(left[idx], right[idx])
                 # print("here1")
                 # print(f"left: {left}, right: {right}, idx: {idx}")
                 if mustBreak:
@@ -70,7 +72,7 @@ def checkOrderCorrect(left, right):
                 #     print("breaking because len left is less")
                 #     break
             elif isinstance(left[idx], list) and isinstance(right[idx], int):
-                res, mustBreak = checkOrderCorrect(left[idx], [right[idx]])
+                res, mustBreak, equal = checkOrderCorrect(left[idx], [right[idx]])
                 # print("here2")
                 if mustBreak:
                     print("breaking 2")
@@ -82,7 +84,7 @@ def checkOrderCorrect(left, right):
                 #     print("here 2")
                 #     break
             elif isinstance(left[idx], int) and isinstance(right[idx], list):
-                res, mustBreak = checkOrderCorrect([left[idx]], right[idx])
+                res, mustBreak, equal = checkOrderCorrect([left[idx]], right[idx])
                 # print("here3")
                 if mustBreak:
                     # print("breaking 3")
@@ -109,6 +111,7 @@ def checkOrderCorrect(left, right):
                 if idx == len(left) - 1 and len(left) < len(right):
                     print("here 7")
                     res = True
+                    equal = True
             #     print("smaller found set")
 
 
@@ -119,7 +122,68 @@ def checkOrderCorrect(left, right):
         #     return res
 
 
-    return res, mustBreak
+    return res, mustBreak, equal
+
+# Return -1 if left < right
+# Return 0 if left == right
+# Return 1 if left > right
+# This function mostly adapted from https://raw.githubusercontent.com/jonathanpaulson/AdventOfCode/master/2022/13.py
+# This comparison function is necessary for part 2 because you need to know when they are equal
+# to get the correct number
+def compare(left, right):
+    if isinstance(left, int) and isinstance(right, int):
+        if left < right:
+            return -1
+        elif left > right:
+            return 1
+        else:
+            return 0
+    elif isinstance(left, list) and isinstance(right, list):
+        i = 0
+        while i < len(left) and i < len(right):
+            c = compare(left[i], right[i])
+            if c == -1 or c == 1:
+                return c
+            i += 1
+        if i == len(left) and i < len(right):
+            return -1
+        elif i == len(right) and i < len(left):
+            return 1
+        else:
+            return 0
+    elif isinstance(left, int) and isinstance(right, list):
+        return compare([left], right)
+    else:
+        return compare(left, [right])
+
+def part2(pairs):
+    packets = []
+    for pair in pairs:
+        left, right = pair
+        packets.append(left)
+        packets.append(right)
+    packets.append([[2]])
+    packets.append([[6]])
+
+#     def compare(left, right):
+#         res, _, equal = checkOrderCorrect(left, right)
+#         if equal == True:
+#             return 0
+#         elif res:
+#             return -1
+#         else:
+#             return 1
+
+    sortedList = sorted(packets, key=cmp_to_key(compare))
+    print(sortedList)
+
+    ans = 1
+    for idx,item in enumerate(sortedList):
+        print(item)
+        if item == [[2]] or item == [[6]]:
+            ans *= (idx+1)
+
+    print(f"Answer: {ans}")
 
 def part1(pairs):
     # print(f"pair 50")
@@ -133,7 +197,7 @@ def part1(pairs):
     for idx, pair in enumerate(pairs):
         left, right = pair
         print(f"left: {left}, right: {right}")
-        res, _  = checkOrderCorrect(left, right)
+        res, _, _  = checkOrderCorrect(left, right)
         print(f"result: {res}\n\n")
         if res == True:
             correctOrder.append(idx + 1)
@@ -148,8 +212,9 @@ def main():
     # lines = readInput('problemChild.txt')
     # lines = readInput('smallerTest.txt')
     print("Part 1")
-    part1(lines)
+    # part1(lines)
     print("Part 2")
+    part2(lines)
 
     # for idx, pair in enumerate(lines):
     #     print(f"idx: {idx}\n")
