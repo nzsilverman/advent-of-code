@@ -40,6 +40,8 @@ def checkOrderCorrect(left, right):
             if isinstance(left[idx], list) and isinstance(right[idx], list):
                 ret, smallerFound = checkOrderCorrect(left[idx], right[idx])
                 res &= ret
+                if res == True: # todo this is broken
+                    break
             elif isinstance(left[idx], list) and isinstance(right[idx], int):
                 ret, smallerFound = checkOrderCorrect(left[idx], [right[idx]])
                 res &= ret
@@ -57,6 +59,7 @@ def checkOrderCorrect(left, right):
 
             if res == False or smallerFound == True:
                 break
+
 
     return res, smallerFound
 
@@ -78,6 +81,7 @@ def main():
     # lines = readInput('input.txt')
     # lines = readInput('inputKarl.txt')
     lines = readInput('problemChild.txt')
+    # lines = readInput('smallerTest.txt')
     print("Part 1")
     part1(lines)
     print("Part 2")
