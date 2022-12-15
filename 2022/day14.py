@@ -26,6 +26,7 @@ for line in lines:
 # Cave must be indexed by [y][x]
 cave = [['.' for x in range(largestX+1)] for y in range(largestY+1)]
 sandStart = (500, 0)
+cave[0][500] = '+'
 
 def swap(left, right):
     tmp = left
@@ -59,24 +60,33 @@ printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
 
 # Update the sand in the cave or return False if it flowed into the abyss
 def simulateSand(location):
+    global cave
+
     x, y = location
-    if y <= len(cave)-1: # On/ Past the Botttom
-        print(f"In the abyss! y: {y}, x: {x}")
-        return False
+    print(f"Starting with x: {x}, y: {y}")
+    # if y <= len(cave)-1: # On/ Past the Botttom
+    #     print(f"In the abyss! y: {y}, x: {x}")
+    #     return False
 
-    while True:
+    while y <= len(cave) - 2:
+        print(f"While loop iteration. x: {x}, y: {y}")
         if cave[y+1][x] in ['#', 'o']:
+            print("1")
             cave[y][x] = 'o'
-            break
+            return True
         elif cave[y+1][x-1] in ['#', 'o']:
+            print("2")
             cave[y][x-1] = 'o'
-            break
+            return True
         elif cave[y+1][x+1] in ['#', 'o']:
+            print("3")
             cave[y][x+1] = 'o'
-            break
+            return True
 
+        # Todo does this need to happen before setting?
         if cave[y+1][x] == '.':
             y += 1
+            print(f"increasing y by 1 to: {y}")
         elif cave[y+1][x-1] == '.':
             y += 1
             x -= 1
@@ -84,11 +94,17 @@ def simulateSand(location):
             y += 1
             x += 1
 
-    return True
+    print(f"In the abyss! y: {y}, x: {x}")
+    return False
+
+print(cave[9][502])
 
 i = 0
-while simulateSand(start) != False:
-# for i in range(25):
+# while simulateSand(sandStart) != False:
+# while True
+for i in range(5):
+    if simulateSand(sandStart) == False:
+        break
     print(f"Cave at {i} iteration")
     printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
     i += 1
