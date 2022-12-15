@@ -24,9 +24,9 @@ for line in lines:
 
 # cave = np.zeroes((largestX, largestY))
 # Cave must be indexed by [y][x]
-cave = [['.' for x in range(largestX+1)] for y in range(largestY+1)]
+cave = [['.' for x in range(largestX+3000)] for y in range(largestY+3000)]
 sandStart = (500, 0)
-cave[0][500] = '+'
+# cave[0][500] = '+'
 
 def swap(left, right):
     tmp = left
@@ -54,7 +54,7 @@ def printRange(matrix, xMin, xMax, yMin, yMax):
     for line in matrix[yMin:yMax+1]:
         print(line[xMin:xMax+1])
 
-offset = 5
+offset = 20
 print("Starting Cave:")
 printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
 
@@ -63,50 +63,54 @@ def simulateSand(location):
     global cave
 
     x, y = location
-    print(f"Starting with x: {x}, y: {y}")
-    # if y <= len(cave)-1: # On/ Past the Botttom
-    #     print(f"In the abyss! y: {y}, x: {x}")
-    #     return False
+    print(f"Simulating with x: {x}, y: {y}")
+    if y >= len(cave)-1: # On/ Past the Botttom
+        print(f"In the abyss! y: {y}, x: {x}")
+        return False
 
-    while y <= len(cave) - 2:
-        print(f"While loop iteration. x: {x}, y: {y}")
-        if cave[y+1][x] in ['#', 'o']:
-            print("1")
-            cave[y][x] = 'o'
-            return True
-        elif cave[y+1][x-1] in ['#', 'o']:
-            print("2")
-            cave[y][x-1] = 'o'
-            return True
-        elif cave[y+1][x+1] in ['#', 'o']:
-            print("3")
-            cave[y][x+1] = 'o'
-            return True
+    if cave[y+1][x] == '.':
+        return simulateSand((x, y+1))
+    elif cave[y+1][x-1] == '.':
+        return simulateSand((x-1, y+1))
+    elif cave[y+1][x+1] == '.':
+        return simulateSand((x+1, y+1))
+    else:
+        cave[y][x] = 'o'
+        return True
 
-        # Todo does this need to happen before setting?
-        if cave[y+1][x] == '.':
-            y += 1
-            print(f"increasing y by 1 to: {y}")
-        elif cave[y+1][x-1] == '.':
-            y += 1
-            x -= 1
-        else:
-            y += 1
-            x += 1
 
-    print(f"In the abyss! y: {y}, x: {x}")
-    return False
+# Part 1
+# i = 1
+# # while simulateSand(sandStart) != False:
+# while True:
+# # for i in range(5):
+#     if simulateSand(sandStart) == False:
+#         i -= 1
+#         break
+#     print(f"Cave at {i} iteration")
+#     printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
+#     i += 1
 
-print(cave[9][502])
+# print(f"Part 1: {i} units of sand have been placed")
 
-i = 0
-# while simulateSand(sandStart) != False:
-# while True
-for i in range(5):
-    if simulateSand(sandStart) == False:
-        break
-    print(f"Cave at {i} iteration")
-    printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
+# Add floor
+for x in range(len(cave[0])):
+    cave[largestY+2][x] = "#"
+
+printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
+
+i = 1
+while cave[0][500] != 'o':
+    simulateSand(sandStart)
+    # print(f"Cave at {i} iteration")
+    # printRange(cave, smallestX-offset, largestX+offset, 0, largestY+offset)
     i += 1
 
+count = 0
+for row in cave:
+    for char in row:
+        if char == 'o':
+            count += 1
+print(f"count: {count}")
 
+print(f"Part 2: {count} units of sand have been placed")
