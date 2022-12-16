@@ -2,6 +2,7 @@ import sys
 from collections import deque
 
 infile = sys.argv[1] if len(sys.argv)>1 else 'input.txt'
+row = int(sys.argv[2]) if len(sys.argv)>2 else 2000000
 data = open(infile).read().strip()
 lines = [line for line in data.split('\n')]
 
@@ -57,7 +58,8 @@ def manhattanDistance(x1, y1, x2, y2):
 #                 if matrix[rowIdx][colIdx] == '.':
 #                     matrix[rowIdx][colIdx] = "#"
 
-# invalidLocations = set()
+invalidLocations = set()
+
 # def addInvalidLocations(sensor, beacon):
 #     sx, sy = sensor
 #     bx, by = beacon
@@ -77,10 +79,9 @@ def manhattanDistance(x1, y1, x2, y2):
 #     print(f"sensor: {sensor}, beacon: {beacon}")
 #     addInvalidLocations(sensor, beacon)
 
-# row = 10
-row = 2000000
 # invalidLocations = set()
-# for i in range(minX-10000000, maxX+10000000):
+
+# for i in range(minX-100000, maxX+100000):
 #     x, y = i, row
 #     for sensor, beacon in zip(sensors, beacons):
 #         sx, sy = sensor
@@ -90,21 +91,16 @@ row = 2000000
 #             if (x,y) not in beacons and (x,y) not in sensors:
 #                 invalidLocations.add((x, y))
 
-invalidLocations = set()
-for sensor, beacon in zip(sensors, beacons):
-    print(f"sensor: {sensor}, beacon: {beacon}")
-    sx, sy = sensor
-    bx, by = beacon
-    dist = manhattanDistance(sx, sy, bx, by)
+for x in range(minX, maxX + 1):
+    for sensor, beacon in zip(sensors, beacons):
+        print(f"sensor: {sensor}, beacon: {beacon}")
+        sx, sy = sensor
+        bx, by = beacon
+        dist = manhattanDistance(sx, sy, bx, by)
+        pointToSensor = manhattanDistance(x, row, sx, sy)
+        if pointToSensor <= dist and (x, row) not in beacons and (x, row) not in sensors:
+            invalidLocations.add((x, row))
 
-    for x in range(dist+1):
-        for y in range(dist+1):
-            posX = sx + x
-            posY = sy + y
-            negX = sx - x
-            negY = sy - y
-            invalidLocations.add((posX, posY))
-            invalidLocations.add((negX, negY))
 
 
 count = 0
