@@ -29,14 +29,21 @@ def PrintDebug(skk, end="\n"):
 
 
 @attrs.define
+class Map():
+  dest_start: int = 0
+  source_start: int = 0
+  length: int = 0
+
+
+@attrs.define
 class Almanac():
-  seed_to_soil_map: dict = {}
-  soil_to_fertilizer_map: dict = {}
-  fertilizer_to_water_map: dict = {}
-  water_to_light_map: dict = {}
-  light_to_temperature_map: dict = {}
-  temperature_to_humidity_map: dict = {}
-  humidity_to_location_map: dict = {}
+  seed_to_soil_maps: list = []
+  soil_to_fertilizer_maps: list = []
+  fertilizer_to_water_maps: list = []
+  water_to_light_maps: list = []
+  light_to_temperature_maps: list = []
+  temperature_to_humidity_maps: list = []
+  humidity_to_location_maps: list = []
 
 
 def BuildAlmanac(lines):
@@ -48,10 +55,10 @@ def BuildAlmanac(lines):
   # offset is 2 for the whitespace and title for each section
   offset = 2
   maps = [
-    almanac.seed_to_soil_map, almanac.soil_to_fertilizer_map,
-    almanac.fertilizer_to_water_map, almanac.water_to_light_map,
-    almanac.light_to_temperature_map, almanac.temperature_to_humidity_map,
-    almanac.humidity_to_location_map
+    almanac.seed_to_soil_maps, almanac.soil_to_fertilizer_maps,
+    almanac.fertilizer_to_water_maps, almanac.water_to_light_maps,
+    almanac.light_to_temperature_maps, almanac.temperature_to_humidity_maps,
+    almanac.humidity_to_location_maps
   ]
 
   assert len(maps) == len(chunks)
@@ -68,10 +75,11 @@ def BuildAlmanac(lines):
 
     for line in map_lines:
       dest_start, source_start, length = [int(x) for x in line.strip().split()]
-      for i in range(length):
-        dest = dest_start + i
-        source = source_start + i
-        maps[idx][source] = dest
+      mapping = Map()
+      mapping.dest_start = dest_start
+      mapping.source_start = source_start
+      mapping.length = length
+      maps[idx].append(mapping)
 
   return almanac
 
@@ -88,8 +96,11 @@ def main():
 
   almanac = BuildAlmanac(lines)
 
-  for source in almanac.seed_to_soil_map.keys():
-    PrintDebug(f"{source} -> {almanac.seed_to_soil_map[source]}")
+  PrintDebug(f"Seed to soil map")
+  for mapping in almanac.seed_to_soil_maps:
+    PrintDebug(
+      f"{mapping.source_start} -> {mapping.dest_start} over range {mapping.length}"
+    )
 
 
 if __name__ == '__main__':
