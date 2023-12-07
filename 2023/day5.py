@@ -1,4 +1,5 @@
 import sys
+import math
 from collections import deque
 
 import attrs
@@ -46,6 +47,17 @@ class Almanac():
   humidity_to_location_maps: list = []
 
 
+@attrs.define
+class Locations():
+  soil: int
+  fertilizer: int
+  water: int
+  light: int
+  temperature: int
+  humidity: int
+  location: int
+
+
 def BuildAlmanac(lines):
   chunks = [idx for idx, line in enumerate(lines) if line == ""]
 
@@ -84,23 +96,104 @@ def BuildAlmanac(lines):
   return almanac
 
 
+def FindDestinationNumber(maps, start):
+  for mapping in maps:
+    if mapping.source_start <= start < mapping.source_start + mapping.length:
+      return mapping.dest_start + abs(mapping.source_start - start)
+
+  return start
+
+
+def BuildSeedToLocationsMap(seeds, almanac):
+  seed_to_locations = {}
+  for seed in seeds:
+    PrintDebug(f"Seed {seed}")
+
+    soil = FindDestinationNumber(almanac.seed_to_soil_maps, seed)
+    PrintDebug(f"Soil: {soil}")
+
+    fertilizer = FindDestinationNumber(almanac.soil_to_fertilizer_maps, soil)
+    PrintDebug(f"fertilizer: {fertilizer}")
+
+    water = FindDestinationNumber(almanac.fertilizer_to_water_maps, fertilizer)
+    PrintDebug(f"water: {water}")
+
+    light = FindDestinationNumber(almanac.water_to_light_maps, water)
+    PrintDebug(f"light: {light}")
+
+    temperature = FindDestinationNumber(almanac.light_to_temperature_maps,
+                                        light)
+    PrintDebug(f"temperature: {temperature}")
+
+    humidity = FindDestinationNumber(almanac.temperature_to_humidity_maps,
+                                     temperature)
+    PrintDebug(f"humidity: {humidity}")
+
+    location = FindDestinationNumber(almanac.humidity_to_location_maps,
+                                     humidity)
+    PrintDebug(f"location: {location}")
+
+    seed_to_locations[seed] = Locations(soil=soil,
+                                        fertilizer=fertilizer,
+                                        water=water,
+                                        light=light,
+                                        temperature=temperature,
+                                        humidity=humidity,
+                                        location=location)
+
+  return seed_to_locations
+
+
+def FindAndPrintLowestSeed(seed_to_locations):
+  lowest = None
+  lowest_seed = None
+  for seed in seed_to_locations.keys():
+    if lowest is None or seed_to_locations[seed].location < lowest:
+      lowest = seed_to_locations[seed].location
+      lowest_seed = seed
+
+  print(f"Seed {lowest_seed} has a location of {lowest}")
+
+
+def Part1(lines):
+  seeds_line = lines[0]
+  seeds = [int(x) for x in seeds_line.split(':')[1].strip().split()]
+
+  almanac = BuildAlmanac(lines)
+
+  seed_to_locations = BuildSeedToLocationsMap(seeds, almanac)
+
+  print("\nPart 1 Answer:")
+  FindAndPrintLowestSeed(seed_to_locations)
+
+
+def Part2(lines):
+  seeds_line = lines[0]
+  seeds_raw = [int(x) for x in seeds_line.split(':')[1].strip().split()]
+  assert len(seeds_raw) % 2 == 0
+
+  seeds = []
+  for start, length in zip(seeds_raw[:-1:2], seeds_raw[1::2]):
+    seeds.extend([x for x in range(start, start + length)])
+    PrintDebug(f"start: {start}, length: {length}")
+
+  PrintDebug(seeds)
+
+  almanac = BuildAlmanac(lines)
+
+  seed_to_locations = BuildSeedToLocationsMap(seeds, almanac)
+
+  print("\nPart 2 Answer:")
+  FindAndPrintLowestSeed(seed_to_locations)
+
+
 def main():
   infile = sys.argv[1] if len(sys.argv) > 1 else 'input.txt'
   data = open(infile).read().strip()
   lines = [line for line in data.split('\n')]
 
-  seeds_line = lines[0]
-  seeds = [int(x) for x in seeds_line.split(':')[1].strip().split()]
-
-  PrintDebug(f"Seeds: {seeds}")
-
-  almanac = BuildAlmanac(lines)
-
-  PrintDebug(f"Seed to soil map")
-  for mapping in almanac.seed_to_soil_maps:
-    PrintDebug(
-      f"{mapping.source_start} -> {mapping.dest_start} over range {mapping.length}"
-    )
+  # Part1(lines)
+  Part2(lines)
 
 
 if __name__ == '__main__':
