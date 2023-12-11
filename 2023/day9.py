@@ -1,5 +1,11 @@
+import argparse
+import math
 import sys
+
+from collections import defaultdict
 from collections import deque
+
+import attrs
 
 
 def PrintRed(skk, end="\n"):
@@ -26,94 +32,152 @@ def PrintDebug(skk, end="\n"):
     print(skk, end=end)
 
 
-def CalculateHistoryPart1(report):
-
-  history = [report]
-
-  current = report
-  while True:
-    row = []
-    for a, b in zip(current[1:], current[:-1]):
-      row.append(a - b)
-    history.append(row)
-    current = row
-
-    if sum(row) == 0:
-      break
-
-  PrintDebug(f"History:")
-  for row in history:
-    PrintDebug(row)
-
-  next_value = 0
-  for row in reversed(history):
-    PrintDebug(f"Row: {row}")
-    next_value += row[-1]
-
-  return next_value
+def RowColToNodeNumber(row_idx, col_idx, length_row):
+  """ Return a unique node number for every row/col idx pair in the graph. """
+  return (col_idx + 1) + row_idx * length_row
 
 
-def Part1(lines):
-  reports = []
-  for line in lines:
-    report = [int(x) for x in line.split()]
-    reports.append(report)
+def InBounds(row_idx, col_idx, matrix):
+  if row_idx < 0 or row_idx >= len(matrix):
+    return False
+  if col_idx < 0 or col_idx >= len(matrix[0]):
+    return False
 
-  sum_history = 0
-  for report in reports:
-    sum_history += CalculateHistoryPart1(report)
-
-  print(f"Part 1: {sum_history}")
+  return True
 
 
-def CalculateHistoryPart2(report):
+def GetVisitedNodesInCycleRecursive(node, parent, adjacency_list, visited):
+  visited.add(node)
 
-  history = [report]
+  # TODO this wont work because of the neighbors finding the start node again
+  # because its undirected ish?
+  for neighbor in adjacency_list[node]:
+    if neighbor == parent:
+      continue
 
-  current = report
-  while True:
-    row = []
-    for a, b in zip(current[1:], current[:-1]):
-      row.append(a - b)
-    history.append(row)
-    current = row
+    if neighbor in visited:
+      return (True, visited)
+    else:
+      if GetVisitedNodesInCycle(neighbor, node, adjacency_list, visited)[0]:
+        return (True, visited)
 
-    if sum(row) == 0:
-      break
-
-  PrintDebug(f"History:")
-  for row in history:
-    PrintDebug(row)
-
-  vals = [0]
-  for idx, row in enumerate(reversed(history[:-1])):
-    diff = row[0] - vals[-1]
-    PrintDebug(f"Row: {row}, diff: {diff}")
-    vals.append(diff)
-
-  return vals[-1]
+  return (False, visited)
 
 
-def Part2(lines):
-  reports = []
-  for line in lines:
-    report = [int(x) for x in line.split()]
-    reports.append(report)
+def GetVisitedNodesInCycle(start_node, adjacency_list):
+  visited = set()
+  PrintDebug(f"Start Node: {start_node}")
 
-  sum_history = 0
-  for report in reports:
-    sum_history += CalculateHistoryPart2(report)
+  stack = deque()
+  stack.append(start_node)
 
-  print(f"Part 2: {sum_history}")
+  while len(stack):
+    s = stack.pop()
+    PrintDebug(f"s: {s}")
+
+    if s not in visited:
+      visited.add(s)
+    elif s == start_node:
+      # Detect cycle
+      PrintLightPurple("CYCLE FOUND")
+      return True, visited
+
+    for node in adjacency_list[s]:
+      if node not in visited and node != s:
+        PrintDebug(f"Adding node {node} to stack")
+        stack.append(node)
+      else:
+        PrintYellow(f"Node ({node}) == s ({s})")
+
+  return False, visited
+
+
+def Part1(adjacency_list, start_node, matrix):
+  print(f"Part 1 Answer:")
+
+  cycle_found, visited = GetVisitedNodesInCycle(start_node, adjacency_list)
+  PrintDebug(f"Cycle Found: {cycle_found}")
+  PrintDebug(f"Visited: {visited}")
+
+  furthest_length = math.ceil(len(visited) / 2)
+  print(f"Part 1: Steps to get to farthest location: {furthest_length}")
 
 
 def main():
-  infile = sys.argv[1] if len(sys.argv) > 1 else 'input.txt'
-  data = open(infile).read().strip()
-  lines = [line for line in data.split('\n')]
+  global DEBUG
+  parser = argparse.ArgumentParser()
+  parser.add_argument("input")
+  parser.add_argument("--debug", action="store_true", default=False)
+  args = parser.parse_args()
+  DEBUG = args.debug
 
-  # Part1(lines)
-  Part2(lines)
+  data = open(args.input).read().strip()
+  matrix = [[char for char in line] for line in data.split('\n')]
+
+  for line in matrix:
+    for char in line:
+      PrintDebug(char, end="")
+    PrintDebug("")
+
+  for row_idx, row in enumerate(matrix):
+    for col_idx, char in enumerate(row):
+      node_number = RowColToNodeNumber(row_idx, col_idx, len(row))
+      PrintDebug(node_number, end="\t")
+    PrintDebug("")
+
+  start_node = None
+  adjacency_list = defaultdict(set)
+
+  for row_idx, row in enumerate(matrix):
+    for col_idx, char in enumerate(row):
+      node_number = RowColToNodeNumber(row_idx, col_idx, len(row))
+      connected = deque()
+      if char == '|':
+        connected.append((row_idx - 1, col_idx))
+        connected.append((row_idx + 1, col_idx))
+      elif char == '-':
+        connected.append((row_idx, col_idx - 1))
+        connected.append((row_idx, col_idx + 1))
+      elif char == 'L':
+        connected.append((row_idx - 1, col_idx))
+        connected.append((row_idx, col_idx + 1))
+      elif char == 'J':
+        connected.append((row_idx - 1, col_idx))
+        connected.append((row_idx, col_idx - 1))
+      elif char == '7':
+        connected.append((row_idx + 1, col_idx))
+        connected.append((row_idx, col_idx - 1))
+      elif char == 'F':
+        connected.append((row_idx + 1, col_idx))
+        connected.append((row_idx, col_idx + 1))
+      elif char == 'S':
+        assert start_node is None
+        start_node = node_number
+
+      items_to_remove = []
+      for item in connected:
+        if not InBounds(item[0], item[1], matrix):
+          items_to_remove.append(item)
+      for item in items_to_remove:
+        connected.remove(item)
+
+      for item in connected:
+        adjacency_list[node_number].add(
+          RowColToNodeNumber(item[0], item[1], len(row)))
+
+  start_node_connections = []
+  for node_number in adjacency_list:
+    if start_node in adjacency_list[node_number]:
+      start_node_connections.append(node_number)
+  assert len(start_node_connections) == 2
+  adjacency_list[start_node].update(start_node_connections)
+
+  PrintDebug("Adjacency List")
+  for node_number in adjacency_list:
+    PrintDebug(
+      f"Node Number: {node_number}, set: {adjacency_list[node_number]}")
+
+  Part1(adjacency_list, start_node, matrix)
 
 
 if __name__ == '__main__':
