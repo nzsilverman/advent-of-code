@@ -77,10 +77,6 @@ def GetVisitedNodesInCycle(start_node, adjacency_list):
 
     if s not in visited:
       visited.add(s)
-    elif s == start_node:
-      # Detect cycle
-      PrintLightPurple("CYCLE FOUND")
-      return True, visited
 
     for node in adjacency_list[s]:
       if node not in visited and node != s:
@@ -89,18 +85,30 @@ def GetVisitedNodesInCycle(start_node, adjacency_list):
       else:
         PrintYellow(f"Node ({node}) == s ({s})")
 
-  return False, visited
+  return visited
 
 
 def Part1(adjacency_list, start_node, matrix):
-  print(f"Part 1 Answer:")
-
-  cycle_found, visited = GetVisitedNodesInCycle(start_node, adjacency_list)
-  PrintDebug(f"Cycle Found: {cycle_found}")
-  PrintDebug(f"Visited: {visited}")
+  visited = GetVisitedNodesInCycle(start_node, adjacency_list)
 
   furthest_length = math.ceil(len(visited) / 2)
   print(f"Part 1: Steps to get to farthest location: {furthest_length}")
+
+
+def Part2(adjacency_list, start_node, matrix):
+  visited = GetVisitedNodesInCycle(start_node, adjacency_list)
+  PrintDebug(f"Visited: {visited}")
+
+  for row_idx, row in enumerate(matrix):
+    for col_idx, char in enumerate(row):
+      node_number = RowColToNodeNumber(row_idx, col_idx, len(row))
+      if node_number in visited:
+        PrintYellow(char, end="")
+      elif char == '.':
+        PrintLightPurple(char, end="")
+      else:
+        PrintDebug(char, end="")
+    PrintDebug("")
 
 
 def main():
@@ -177,7 +185,8 @@ def main():
     PrintDebug(
       f"Node Number: {node_number}, set: {adjacency_list[node_number]}")
 
-  Part1(adjacency_list, start_node, matrix)
+  # Part1(adjacency_list, start_node, matrix)
+  Part2(adjacency_list, start_node, matrix)
 
 
 if __name__ == '__main__':
