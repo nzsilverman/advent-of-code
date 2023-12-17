@@ -1,5 +1,6 @@
 import sys
 import math
+import bisect
 from collections import deque
 
 import attrs
@@ -21,7 +22,7 @@ def PrintLightPurple(skk, end="\n"):
   PrintDebug("\033[94m{}\033[00m".format(skk), end=end)
 
 
-DEBUG = 1
+DEBUG = 0
 
 
 def PrintDebug(skk, end="\n"):
@@ -104,6 +105,118 @@ def FindDestinationNumber(maps, start):
   return start
 
 
+def FindClosestInMap(sources, x):
+  index = bisect.bisect_left(sources, x)
+  return index
+
+
+def GetMapping(sources, sources_to_map, x):
+  closest = bisect.bisect_left(sources, x)
+  PrintDebug(f"Sources: {sources}")
+  PrintDebug(f"Sources to Map: {sources_to_map}")
+  PrintDebug(f"X: {x}")
+  PrintDebug(f"closest: {closest}")
+  if closest < len(sources):
+    if x == sources[closest]:
+      return sources_to_map[x].dest_start
+
+  if closest == 0:
+    return x
+  # elif closest == len(sources):
+  #   closest_source = sources[closest]
+  #   if x < closest_source + sources_to_map[closest_source].length:
+  #     return sources_to_map[closest_source].dest_start + abs(closest_source - x)
+  else:
+    closest_source = sources[closest - 1]
+    if x < closest_source + sources_to_map[closest_source].length:
+      return sources_to_map[closest_source].dest_start + abs(closest_source - x)
+    else:
+      return x
+
+
+def SolvePart2BruteForce(seeds, almanac):
+  lowest_location = None
+
+  seed_to_soil_sources = sorted(
+    [x.source_start for x in almanac.seed_to_soil_maps])
+  seed_source_to_map = {x.source_start: x for x in almanac.seed_to_soil_maps}
+
+  soil_to_fertilizer_sources = sorted(
+    [x.source_start for x in almanac.soil_to_fertilizer_maps])
+  soil_source_to_map = {
+    x.source_start: x
+    for x in almanac.soil_to_fertilizer_maps
+  }
+
+  fertilizer_to_water_sources = sorted(
+    [x.source_start for x in almanac.fertilizer_to_water_maps])
+  fertilizer_source_to_map = {
+    x.source_start: x
+    for x in almanac.fertilizer_to_water_maps
+  }
+
+  water_to_light_sources = sorted(
+    [x.source_start for x in almanac.water_to_light_maps])
+  water_source_to_map = {x.source_start: x for x in almanac.water_to_light_maps}
+
+  light_to_temperature_sources = sorted(
+    [x.source_start for x in almanac.light_to_temperature_maps])
+  light_source_to_map = {
+    x.source_start: x
+    for x in almanac.light_to_temperature_maps
+  }
+
+  temperature_to_humidity_sources = sorted(
+    [x.source_start for x in almanac.temperature_to_humidity_maps])
+  temperature_source_to_map = {
+    x.source_start: x
+    for x in almanac.temperature_to_humidity_maps
+  }
+
+  humidity_to_location_sources = sorted(
+    [x.source_start for x in almanac.humidity_to_location_maps])
+  humidity_source_to_map = {
+    x.source_start: x
+    for x in almanac.humidity_to_location_maps
+  }
+
+  # seeds = [82, 1]
+  for start, length in zip(seeds[:-1:2], seeds[1::2]):
+    for seed in range(start, start + length):
+
+      PrintDebug(f"Seed: {seed}")
+
+      soil = GetMapping(seed_to_soil_sources, seed_source_to_map, seed)
+      PrintDebug(f"Soil: {soil}")
+
+      fertilizer = GetMapping(soil_to_fertilizer_sources, soil_source_to_map,
+                              soil)
+      PrintDebug(f"Fertilizer: {fertilizer}")
+
+      water = GetMapping(fertilizer_to_water_sources, fertilizer_source_to_map,
+                         fertilizer)
+      PrintDebug(f"Water: {water}")
+
+      light = GetMapping(water_to_light_sources, water_source_to_map, water)
+      PrintDebug(f"Light: {light}")
+
+      temperature = GetMapping(light_to_temperature_sources,
+                               light_source_to_map, light)
+      PrintDebug(f"temperature: {temperature}")
+
+      humidity = GetMapping(temperature_to_humidity_sources,
+                            temperature_source_to_map, temperature)
+      PrintDebug(f"humidity: {humidity}")
+
+      location = GetMapping(humidity_to_location_sources,
+                            humidity_source_to_map, humidity)
+
+      if lowest_location is None or location < lowest_location:
+        lowest_location = location
+
+  print(f"Lowest location: {lowest_location}")
+
+
 def BuildSeedToLocationsMap(seeds, almanac):
   seed_to_locations = {}
   for seed in seeds:
@@ -144,6 +257,14 @@ def BuildSeedToLocationsMap(seeds, almanac):
   return seed_to_locations
 
 
+def NumberIsInputInMaps(maps, number):
+  for mapping in maps:
+    if mapping.source_start <= number < mapping.source_start + mapping.length:
+      return True
+
+  return False
+
+
 def FindAndPrintLowestSeed(seed_to_locations):
   lowest = None
   lowest_seed = None
@@ -169,22 +290,13 @@ def Part1(lines):
 
 def Part2(lines):
   seeds_line = lines[0]
-  seeds_raw = [int(x) for x in seeds_line.split(':')[1].strip().split()]
-  assert len(seeds_raw) % 2 == 0
-
-  seeds = []
-  for start, length in zip(seeds_raw[:-1:2], seeds_raw[1::2]):
-    seeds.extend([x for x in range(start, start + length)])
-    PrintDebug(f"start: {start}, length: {length}")
-
-  PrintDebug(seeds)
+  seeds = [int(x) for x in seeds_line.split(':')[1].strip().split()]
+  assert len(seeds) % 2 == 0
 
   almanac = BuildAlmanac(lines)
 
-  seed_to_locations = BuildSeedToLocationsMap(seeds, almanac)
-
   print("\nPart 2 Answer:")
-  FindAndPrintLowestSeed(seed_to_locations)
+  SolvePart2BruteForce(seeds, almanac)
 
 
 def main():
