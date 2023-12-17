@@ -1,5 +1,8 @@
-import sys
+import argparse
 import math
+import sys
+
+from collections import defaultdict
 from collections import deque
 
 import attrs
@@ -21,7 +24,7 @@ def PrintLightPurple(skk, end="\n"):
   PrintDebug("\033[94m{}\033[00m".format(skk), end=end)
 
 
-DEBUG = 1
+DEBUG = 0
 
 
 def PrintDebug(skk, end="\n"):
@@ -30,8 +33,14 @@ def PrintDebug(skk, end="\n"):
 
 
 def main():
-  infile = sys.argv[1] if len(sys.argv) > 1 else 'input.txt'
-  data = open(infile).read().strip()
+  global DEBUG
+  parser = argparse.ArgumentParser()
+  parser.add_argument("input")
+  parser.add_argument("--debug", action="store_true", default=False)
+  args = parser.parse_args()
+  DEBUG = args.debug
+
+  data = open(args.input).read().strip()
   lines = [line for line in data.split('\n')]
 
   for line in lines:
