@@ -7,6 +7,8 @@ from collections import deque
 
 import attrs
 
+DEBUG = 0
+
 
 def PrintRed(skk, end="\n"):
   PrintDebug("\033[91m{}\033[00m".format(skk), end=end)
@@ -22,9 +24,6 @@ def PrintYellow(skk, end="\n"):
 
 def PrintLightPurple(skk, end="\n"):
   PrintDebug("\033[94m{}\033[00m".format(skk), end=end)
-
-
-DEBUG = 0
 
 
 def PrintDebug(skk, end="\n"):
