@@ -77,9 +77,8 @@ def ExpandUniverse(matrix):
   return new_matrix
 
 
-# @attrs.define(frozen=True)
 @attrs.define()
-class Node():
+class Coordinates():
   row: int
   col: int
 
@@ -89,7 +88,7 @@ def GetNodeCoordinates(matrix):
   for row_idx, row in enumerate(matrix):
     for col_idx, char in enumerate(row):
       if char != '.':
-        node_to_coords[char] = Node(row=row_idx, col=col_idx)
+        node_to_coords[char] = Coordinates(row=row_idx, col=col_idx)
   return node_to_coords
 
 
@@ -102,24 +101,62 @@ def InBounds(row_idx, col_idx, row_len, col_len):
   return True
 
 
-def ShortestDistanceBetweenNodes(start_node, end_node, row_len, col_len):
+def ShortestDistanceBetweenNodes(start_node, end_node, row_len, col_len,
+                                 combination_to_shortest_distance,
+                                 coords_to_node):
   visited = set()
 
   queue = deque()
   queue.append((start_node, 0))
 
+  location_to_shortest = {}
+  end_node_num = coords_to_node[(end_node.row, end_node.col)]
+
+  shortest_path_candidate = sys.maxsize
+
   while len(queue):
     s, dist = queue.popleft()
+    loc_tuple = (s.row, s.col)
+
+    if dist >= shortest_path_candidate:
+      PrintDebug("Distance explored is greater than shortest path")
+      continue
+      # return shortest_path_candidate
 
     if s == end_node:
       PrintDebug(f"Found end node!")
       return dist
 
-    if (s.row, s.col) not in visited:
-      visited.add((s.row, s.col))
+    if loc_tuple not in visited:
+      visited.add(loc_tuple)
+    else:
+      if loc_tuple in location_to_shortest:
+        if dist >= location_to_shortest[loc_tuple]:
+          continue
+        else:
+          location_to_shortest[loc_tuple] = dist
+      else:
+        location_to_shortest[loc_tuple] = dist
+
+    if loc_tuple in coords_to_node:
+      galaxy_num = coords_to_node[loc_tuple]
+      smallest = min(galaxy_num, end_node_num)
+      largest = max(galaxy_num, end_node_num)
+      if (smallest, largest) in combination_to_shortest_distance:
+        PrintDebug(
+          f"Found a path from galaxy {galaxy_num} to destination node {end_node_num}"
+        )
+        PrintDebug(
+          f"dist: {dist}, combination_to_shortest_distance[(smallest, largest)]: {combination_to_shortest_distance[(smallest, largest)]}"
+        )
+        shortest_path_candidate = min(
+          shortest_path_candidate,
+          dist + combination_to_shortest_distance[(smallest, largest)])
+        continue
+        # return dist + combination_to_shortest_distance[(smallest, largest)]
 
     for permutation in [[-1, 0], [1, 0], [0, -1], [0, 1]]:
-      test_node = Node(s.row + permutation[0], s.col + permutation[1])
+      test_node = Coordinates(s.row + permutation[0], s.col + permutation[1])
       if InBounds(test_node.row, test_node.col, row_len, col_len):
         if (test_node.row, test_node.col) not in visited:
           queue.append((test_node, dist + 1))
@@ -128,12 +165,12 @@ def ShortestDistanceBetweenNodes(start_node, end_node, row_len, col_len):
 
 
 def GetCombinationsToShortestDistances(combinations, node_to_coords, row_len,
-                                       col_len):
+                                       col_len, coords_to_node):
   combination_to_shortest_distance = {}
   for combination in combinations:
     shortest_distance = ShortestDistanceBetweenNodes(
       node_to_coords[combination[0]], node_to_coords[combination[1]], row_len,
-      col_len)
+      col_len, combination_to_shortest_distance, coords_to_node)
     combination_to_shortest_distance[combination] = shortest_distance
 
   return combination_to_shortest_distance
@@ -172,14 +209,17 @@ def main():
     PrintDebug("")
 
   node_to_coords = GetNodeCoordinates(matrix)
+  coords_to_node = {}
   for key in node_to_coords.keys():
+    row, col = node_to_coords[key].row, node_to_coords[key].col
+    coords_to_node[(row, col)] = key
     PrintDebug(f"Node {key}: {node_to_coords[key]}")
 
   combinations = list(itertools.combinations(node_to_coords, 2))
   PrintDebug(f"Found {len(combinations)} unique combinations")
 
   combination_to_shortest_distance = GetCombinationsToShortestDistances(
-    combinations, node_to_coords, len(matrix), len(matrix[0]))
+    combinations, node_to_coords, len(matrix), len(matrix[0]), coords_to_node)
   for key in combination_to_shortest_distance.keys():
     PrintDebug(
       f"Shortest distance between {key} is {combination_to_shortest_distance[key]}"
